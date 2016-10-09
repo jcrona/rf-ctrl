@@ -1,3 +1,10 @@
+#
+# Copyright (C) 2016 Jean-Christophe Rona <jc@rona.fr>
+#
+# This is free software, licensed under the GNU General Public License v2.
+# See /LICENSE for more information.
+#
+
 GNU_PREFIX ?=
 
 # Allow to create a static binary
