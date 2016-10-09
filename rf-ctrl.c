@@ -31,7 +31,7 @@
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 #define APP_NAME			"rf-ctrl"
-#define APP_VERSION			"0.4"
+#define APP_VERSION			"0.5"
 #define COPYRIGHT_DATE			"2016"
 #define AUTHOR_NAME			"Jean-Christophe Rona"
 
