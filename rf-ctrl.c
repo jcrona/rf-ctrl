@@ -197,7 +197,7 @@ static int get_cmd_id_by_name(char *cmd_str) {
 	return -1;
 }
 
-int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t command, int protocol) {
+static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t command, int protocol) {
 	struct rf_protocol_driver *protocol_driver;
 	uint8_t data[MAX_FRAME_LENGTH];
 	int data_bit_count;
