@@ -1,6 +1,6 @@
 /*
  * rf-ctrl - A command-line tool to control 433MHz OOK based devices
- * OOK GPIO-based 433 MHz RF Transeiver driver (ook-gpio.ko kernel module needed)
+ * OOK GPIO-based 433 MHz RF Transmitter driver (ook-gpio.ko kernel module needed)
  *
  * Copyright (C) 2016 Jean-Christophe Rona <jc@rona.fr>
  *

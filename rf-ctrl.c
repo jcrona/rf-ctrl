@@ -266,7 +266,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 		"  -r | --remote <id>         Remote ID to take\n"
 		"  -d | --device <id>         Device ID to reach\n"
 		"  -c | --command <command>   Command to send\n"
-		"  -s | --scan                Perform a brute force scan (-p, -r and -d can be used to force a specific value)\n"
+		"  -s | --scan                Perform a brute force scan (-p, -r and -d can be used to force specific values)\n"
 		"  -n | --nframe <0-255>      Number of frames to send (override per protocol default value)\n"
 		"  -v | --verbose             Print more detailed information (-vv and -vvv for even more details)\n"
 		"  -h | --help                Print this message\n\n",
