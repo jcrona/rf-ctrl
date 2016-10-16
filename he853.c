@@ -46,6 +46,23 @@
 hid_device *handle = NULL;
 
 
+static int he853_probe(void) {
+	hid_device *h;
+
+	h = hid_open(HE853_VID, HE853_PID, NULL);
+
+	if (!h) {
+		dbg_printf(2, "%s not detected\n", HARDWARE_NAME);
+		return -1;
+	}
+
+	hid_close(h);
+
+	dbg_printf(2, "%s detected\n", HARDWARE_NAME);
+
+	return 0;
+}
+
 static int he853_init(void) {
 	if (handle != NULL) {
 		dbg_printf(1, "%s device already initialized\n", HARDWARE_NAME);
@@ -304,6 +321,7 @@ struct rf_hardware_driver he853_driver = {
 	.name = HARDWARE_NAME,
 	.cmd_name = "he853",
 	.long_name = "HE853 USB RF dongle",
+	.probe = &he853_probe,
 	.init = &he853_init,
 	.close = &he853_close,
 	.send_cmd = &he853_send_cmd,

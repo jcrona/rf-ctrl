@@ -27,6 +27,11 @@
 #include "rf-ctrl.h"
 
 
+static int dummy_probe(void) {
+	/* Prevent from being auto-detected */
+	return -1;
+}
+
 static int dummy_init(void) {
 	return 0;
 }
@@ -42,6 +47,7 @@ struct rf_hardware_driver dummy_driver = {
 	.name = "Dummy HW",
 	.cmd_name = "dummy",
 	.long_name = "Dummy Hardware Driver",
+	.probe = &dummy_probe,
 	.init = &dummy_init,
 	.close = &dummy_close,
 	.send_cmd = &dummy_send_cmd,

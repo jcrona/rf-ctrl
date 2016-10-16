@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "rf-ctrl.h"
 
@@ -31,6 +32,24 @@
 #define OOK_GPIO_TIMINGS_PATH		"/sys/devices/platform/ook-gpio.0/timings"
 #define OOK_GPIO_FRAME_PATH		"/sys/devices/platform/ook-gpio.0/frame"
 
+
+static int ook_gpio_probe(void) {
+	if (access(OOK_GPIO_TIMINGS_PATH, W_OK ) < 0) {
+		dbg_printf(3, "%s: no access to %s\n", HARDWARE_NAME, OOK_GPIO_TIMINGS_PATH);
+		dbg_printf(2, "%s not detected\n", HARDWARE_NAME);
+		return -1;
+	}
+
+	if (access(OOK_GPIO_FRAME_PATH, W_OK ) < 0) {
+		dbg_printf(3, "%s: no access to %s\n", HARDWARE_NAME, OOK_GPIO_FRAME_PATH);
+		dbg_printf(2, "%s not detected\n", HARDWARE_NAME);
+		return -1;
+	}
+
+	dbg_printf(1, "%s detected\n", HARDWARE_NAME);
+
+	return 0;
+}
 
 static int ook_gpio_init(void) {
 	return 0;
@@ -114,6 +133,7 @@ struct rf_hardware_driver ook_gpio_driver = {
 	.name = HARDWARE_NAME,
 	.cmd_name = "ook-gpio",
 	.long_name = "OOK GPIO-based 433 MHz RF Transeiver",
+	.probe = &ook_gpio_probe,
 	.init = &ook_gpio_init,
 	.close = &ook_gpio_close,
 	.send_cmd = &ook_gpio_send_cmd,

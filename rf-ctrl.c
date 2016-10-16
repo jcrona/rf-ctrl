@@ -36,7 +36,6 @@
 #define AUTHOR_NAME			"Jean-Christophe Rona"
 
 #define MAX_FRAME_LENGTH		32
-#define DEFAULT_HW_DRIVER		0
 
 /* WARNING: Needs to remain in-sync with PARAM_* defines in rf-ctrl.h */
 char *(parameter_str[]) = {
@@ -173,6 +172,18 @@ static struct rf_hardware_driver * get_hw_driver_by_name(char *hw_str) {
 	return NULL;
 }
 
+static struct rf_hardware_driver * auto_detect_hw_driver(void) {
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(hardware_drivers); i++) {
+		if (!hardware_drivers[i]->probe()) {
+			return hardware_drivers[i];
+		}
+	}
+
+	return NULL;
+}
+
 static int get_hw_id_by_name(char *hw_str) {
 	int i;
 
@@ -261,7 +272,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 		APP_NAME" v"APP_VERSION" - (C)"COPYRIGHT_DATE" "AUTHOR_NAME"\n\n"
 		"Usage: %s [options]\n\n"
 		"Options:\n"
-		"  -H | --hw <hardware>       Hardware driver to use (default \"%s\")\n"
+		"  -H | --hw <hardware>       Hardware driver to use (otherwise try to auto-detect)\n"
 		"  -p | --proto <protocol>    Protocol to use\n"
 		"  -r | --remote <id>         Remote ID to take\n"
 		"  -d | --device <id>         Device ID to reach\n"
@@ -270,7 +281,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 		"  -n | --nframe <0-255>      Number of frames to send (override per protocol default value)\n"
 		"  -v | --verbose             Print more detailed information (-vv and -vvv for even more details)\n"
 		"  -h | --help                Print this message\n\n",
-		argv[0], hardware_drivers[DEFAULT_HW_DRIVER]->cmd_name);
+		argv[0]);
 
 	fprintf(fp, "Available hardware drivers:");
 	for (i = 0; i < ARRAY_SIZE(hardware_drivers); i++) {
@@ -327,7 +338,7 @@ static const struct option long_options[] = {
 int main(int argc, char **argv)
 {
 	int ret = 0;
-	int hw = DEFAULT_HW_DRIVER;
+	int hw = -1;
 	int nframe = -1;
 	int protocol = -1, command = -1;
 	uint32_t remote_id = 0, device_id = 0;
@@ -444,11 +455,21 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	current_hw_driver = get_hw_driver_by_id(hw);
-	if (!current_hw_driver) {
-		fprintf(stderr, "Cannot get %s hw driver\n", current_hw_driver->name);
-		return -1;
+	if (hw < 0) {
+		/* Try to auto-detect */
+		current_hw_driver = auto_detect_hw_driver();
+		if (!current_hw_driver) {
+			fprintf(stderr, "Cannot auto-detect HW driver\n");
+			return -1;
+		}
+	} else {
+		current_hw_driver = get_hw_driver_by_id(hw);
+		if (!current_hw_driver) {
+			fprintf(stderr, "Cannot find HW driver with index %d\n", hw);
+			return -1;
+		}
 	}
+
 
 	printf("Initializing %s driver...\n", current_hw_driver->long_name);
 	ret = current_hw_driver->init();

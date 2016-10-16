@@ -63,6 +63,7 @@ struct rf_hardware_driver {
 	char *name;
 	char *cmd_name;
 	char *long_name;
+	int (*probe)(void);
 	int (*init)(void);
 	void (*close)(void);
 	int (*send_cmd)(struct timing_config *config, uint8_t *frame_data, uint8_t bit_count);
