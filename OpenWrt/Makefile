@@ -40,8 +40,8 @@ define Build/Compile
 endef
 
 define Package/rf-ctrl/install
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rf-ctrl $(1)/usr/sbin/
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rf-ctrl $(1)/usr/bin/
 endef
 
 $(eval $(call BuildPackage,rf-ctrl))
