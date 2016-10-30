@@ -25,6 +25,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <getopt.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #include "rf-ctrl.h"
 
@@ -34,6 +37,8 @@
 #define APP_VERSION			"0.6"
 #define COPYRIGHT_DATE			"2016"
 #define AUTHOR_NAME			"Jean-Christophe Rona"
+
+#define STORAGE_PATH_BASE		"."APP_NAME
 
 #define MAX_FRAME_LENGTH		32
 
@@ -126,6 +131,41 @@ void dbg_printf(int level, char *buff, ...) {
 	vfprintf(stdout, buff, arglist);
 
 	va_end(arglist);
+}
+
+static void mkdir_p(const char *dir) {
+	char *tmp, *p = NULL;
+	size_t len;
+
+	tmp = strdup(dir);
+	len = strlen(tmp);
+
+	if (tmp[len - 1] == '/') {
+		tmp[len - 1] = 0;
+	}
+
+	for (p = tmp + 1; *p != '\0'; p++) {
+		if (*p == '/') {
+			*p = 0;
+			mkdir(tmp, S_IRWXU);
+			*p = '/';
+		}
+	}
+	mkdir(tmp, S_IRWXU);
+
+	free(tmp);
+}
+
+void get_storage_path(char *path, struct rf_protocol_driver *protocol) {
+	struct stat st = {0};
+	struct passwd *pw = getpwuid(getuid());
+
+	snprintf(path, STORAGE_PATH_MAX_LEN, "%s/%s/%s", pw->pw_dir, STORAGE_PATH_BASE, protocol->cmd_name);
+
+	/* Create the folder if it does not exist */
+	if (stat(path, &st) < 0) {
+		mkdir_p(path);
+	}
 }
 
 static struct rf_protocol_driver * get_protocol_driver_by_id(unsigned int protocol) {

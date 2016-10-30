@@ -30,6 +30,8 @@
 #define PARAM_NFRAME			0X40
 #define PARAM_VERBOSE			0X80
 
+#define STORAGE_PATH_MAX_LEN		512
+
 typedef enum {
 	RF_CMD_OFF =		0,
 	RF_CMD_ON =		1,
@@ -85,5 +87,6 @@ struct rf_protocol_driver {
 
 int is_dbg_enabled(int level);
 void dbg_printf(int level, char *buff, ...);
+void get_storage_path(char *path, struct rf_protocol_driver *protocol);
 
 #endif /* _RF_CTRL_H_ */
