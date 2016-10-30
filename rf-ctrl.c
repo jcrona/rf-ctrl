@@ -55,6 +55,10 @@ char *(rf_command_str[]) = {
 	"ON",
 	"Group ON",
 	"Group OFF",
+	"Prog",
+	"F1",
+	"F2",
+	"F3",
 };
 
 char *(rf_cmdline_command_str[]) = {
@@ -62,6 +66,10 @@ char *(rf_cmdline_command_str[]) = {
 	"on",
 	"gon",
 	"goff",
+	"prog",
+	"f1",
+	"f2",
+	"f3",
 };
 
 /* WARNING: Needs to remain in-sync with rf_bit_fmt_t enum in rf-ctrl.h */

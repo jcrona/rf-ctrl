@@ -35,6 +35,10 @@ typedef enum {
 	RF_CMD_ON =		1,
 	RF_CMD_GOFF =		2,
 	RF_CMD_GON =		3,
+	RF_CMD_PROG =		4,
+	RF_CMD_F1 =		5,
+	RF_CMD_F2 =		6,
+	RF_CMD_F3 =		7,
 	RF_CMD_MAX,
 } rf_command_t;
 
