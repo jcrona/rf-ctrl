@@ -68,12 +68,23 @@ static int ook_gpio_set_timings(struct timing_config *conf) {
 		return -1;
 	}
 
-	ret = fprintf(f_timings, "%u,%u,%u,%u,%u,%u,%u,%u,%u,%u",
-			conf->start_bit_h_time, conf->start_bit_l_time,
-			conf->end_bit_h_time, conf->end_bit_l_time,
-			conf->data_bit0_h_time, conf->data_bit0_l_time,
-			conf->data_bit1_h_time, conf->data_bit1_l_time,
-			(conf->bit_fmt == RF_BIT_FMT_HL) ? 0 : 1, conf->frame_count);
+	switch (conf->bit_fmt) {
+		case RF_BIT_FMT_HL:
+		case RF_BIT_FMT_LH:
+			ret = fprintf(f_timings, "%u,%u,%u,%u,%u,%u,%u,%u,%u,%u",
+					conf->start_bit_h_time, conf->start_bit_l_time,
+					conf->end_bit_h_time, conf->end_bit_l_time,
+					conf->data_bit0_h_time, conf->data_bit0_l_time,
+					conf->data_bit1_h_time, conf->data_bit1_l_time,
+					(conf->bit_fmt == RF_BIT_FMT_HL) ? 0 : 1, conf->frame_count);
+			break;
+
+		default:
+			fprintf(stderr, "%s: Bit format %s is not supported !\n", HARDWARE_NAME, rf_bit_fmt_str[(int) conf->bit_fmt]);
+			fclose(f_timings);
+			return -1;
+	}
+
 	if (ret < 0) {
 		fprintf(stderr, "%s: Cannot write timings\n", HARDWARE_NAME);
 	}

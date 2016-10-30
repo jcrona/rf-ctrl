@@ -47,6 +47,7 @@ typedef enum {
 typedef enum {
 	RF_BIT_FMT_HL =		0,
 	RF_BIT_FMT_LH =		1,
+	RF_BIT_FMT_RAW =	2,
 } rf_bit_fmt_t;
 
 extern char *(rf_command_str[]);
@@ -61,6 +62,7 @@ struct timing_config {
 	uint16_t data_bit0_l_time;
 	uint16_t data_bit1_h_time;
 	uint16_t data_bit1_l_time;
+	uint16_t base_time;
 	rf_bit_fmt_t bit_fmt;
 	uint8_t frame_count;
 };

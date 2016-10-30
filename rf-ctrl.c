@@ -40,7 +40,7 @@
 
 #define STORAGE_PATH_BASE		"."APP_NAME
 
-#define MAX_FRAME_LENGTH		32
+#define MAX_FRAME_LENGTH		512
 
 /* WARNING: Needs to remain in-sync with PARAM_* defines in rf-ctrl.h */
 char *(parameter_str[]) = {
@@ -81,6 +81,7 @@ char *(rf_cmdline_command_str[]) = {
 char *(rf_bit_fmt_str[]) = {
 	"H-L",
 	"L-H",
+	"Raw",
 };
 
 struct rf_hardware_driver *current_hw_driver = NULL;
@@ -284,16 +285,27 @@ static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t com
 	printf("...\n");
 
 	if (is_dbg_enabled(3)) {
-		dbg_printf(3, "  Timings (%s): Start-bit HTime %u us - Start-bit LTime %u us\n", protocol_driver->name,
-				protocol_driver->timings->start_bit_h_time, protocol_driver->timings->start_bit_l_time);
-		dbg_printf(3, "  Timings (%s): End-bit HTime %u us - End-bit LTime %u us\n", protocol_driver->name,
-				protocol_driver->timings->end_bit_h_time, protocol_driver->timings->end_bit_l_time);
-		dbg_printf(3, "  Timings (%s): Data-bit0 HTime %u us - Data-bit0 LTime %u us\n", protocol_driver->name,
-				protocol_driver->timings->data_bit0_h_time, protocol_driver->timings->data_bit0_l_time);
-		dbg_printf(3, "  Timings (%s): Data-bit1 HTime %u us - Data-bit1 LTime %u us\n", protocol_driver->name,
-				protocol_driver->timings->data_bit1_h_time, protocol_driver->timings->data_bit1_l_time);
 		dbg_printf(3, "  Timings (%s): Bit Format %s - Frame Count %u\n", protocol_driver->name,
 				rf_bit_fmt_str[(int) protocol_driver->timings->bit_fmt], protocol_driver->timings->frame_count);
+
+		switch (protocol_driver->timings->bit_fmt) {
+			case RF_BIT_FMT_HL:
+			case RF_BIT_FMT_LH:
+				dbg_printf(3, "  Timings (%s): Start-bit HTime %u us - Start-bit LTime %u us\n", protocol_driver->name,
+						protocol_driver->timings->start_bit_h_time, protocol_driver->timings->start_bit_l_time);
+				dbg_printf(3, "  Timings (%s): End-bit HTime %u us - End-bit LTime %u us\n", protocol_driver->name,
+						protocol_driver->timings->end_bit_h_time, protocol_driver->timings->end_bit_l_time);
+				dbg_printf(3, "  Timings (%s): Data-bit0 HTime %u us - Data-bit0 LTime %u us\n", protocol_driver->name,
+						protocol_driver->timings->data_bit0_h_time, protocol_driver->timings->data_bit0_l_time);
+				dbg_printf(3, "  Timings (%s): Data-bit1 HTime %u us - Data-bit1 LTime %u us\n", protocol_driver->name,
+						protocol_driver->timings->data_bit1_h_time, protocol_driver->timings->data_bit1_l_time);
+				break;
+
+			case RF_BIT_FMT_RAW:
+				dbg_printf(3, "  Timings (%s): Base HLTime %u us\n", protocol_driver->name,
+						protocol_driver->timings->base_time);
+				break;
+		}
 	}
 
 	if (is_dbg_enabled(1)) {
