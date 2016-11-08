@@ -95,6 +95,7 @@ extern struct rf_protocol_driver idk_driver;
 extern struct rf_protocol_driver sumtech_driver;
 extern struct rf_protocol_driver auchan_driver;
 extern struct rf_protocol_driver auchan2_driver;
+extern struct rf_protocol_driver somfy_driver;
 
 extern struct rf_hardware_driver he853_driver;
 extern struct rf_hardware_driver ook_gpio_driver;
@@ -108,6 +109,7 @@ struct rf_protocol_driver *(protocol_drivers[]) = {
 	&sumtech_driver,
 	&auchan_driver,
 	&auchan2_driver,
+	&somfy_driver,
 };
 
 struct rf_hardware_driver *(hardware_drivers[]) = {
