@@ -46,7 +46,7 @@ static int dummy_send_cmd(struct timing_config *config, uint8_t *frame_data, uin
 struct rf_hardware_driver dummy_driver = {
 	.name = "Dummy HW",
 	.cmd_name = "dummy",
-	.long_name = "Dummy Hardware Driver",
+	.long_name = "Dummy Hardware",
 	.probe = &dummy_probe,
 	.init = &dummy_init,
 	.close = &dummy_close,
