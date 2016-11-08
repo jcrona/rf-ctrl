@@ -79,6 +79,11 @@ static int ook_gpio_set_timings(struct timing_config *conf) {
 					(conf->bit_fmt == RF_BIT_FMT_HL) ? 0 : 1, conf->frame_count);
 			break;
 
+		case RF_BIT_FMT_RAW:
+			ret = fprintf(f_timings, "%u,0,0,0,0,0,0,0,2,%u",
+					conf->base_time, conf->frame_count);
+			break;
+
 		default:
 			fprintf(stderr, "%s: Bit format %s is not supported !\n", HARDWARE_NAME, rf_bit_fmt_str[(int) conf->bit_fmt]);
 			fclose(f_timings);
