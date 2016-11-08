@@ -39,7 +39,7 @@ static int dummy_init(void) {
 static void dummy_close(void) {
 }
 
-static int dummy_send_cmd(struct timing_config *config, uint8_t *frame_data, uint8_t bit_count) {
+static int dummy_send_cmd(struct timing_config *config, uint8_t *frame_data, uint16_t bit_count) {
 	return 0;
 }
 

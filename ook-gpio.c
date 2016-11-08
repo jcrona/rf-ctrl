@@ -94,7 +94,7 @@ static int ook_gpio_set_timings(struct timing_config *conf) {
 	return (ret < 0) ? ret : 0;
 }
 
-static int ook_gpio_send_frame(uint8_t *frame_data, uint8_t bit_count) {
+static int ook_gpio_send_frame(uint8_t *frame_data, uint16_t bit_count) {
 	FILE *f_frame;
 	uint32_t str_size;
 	char *str;
@@ -128,7 +128,7 @@ static int ook_gpio_send_frame(uint8_t *frame_data, uint8_t bit_count) {
 	return (ret < 0) ? ret : 0;
 }
 
-static int ook_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data, uint8_t bit_count) {
+static int ook_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data, uint16_t bit_count) {
 	int ret = 0;
 
 	ret = ook_gpio_set_timings(config);

@@ -305,8 +305,13 @@ static int he853_configure(struct timing_config *conf, uint8_t *frame_data, uint
 		&& he853_send_hid_report(cmd_buf+24);
 }
 
-static int he853_send_cmd(struct timing_config *config, uint8_t *frame_data, uint8_t bit_count) {
+static int he853_send_cmd(struct timing_config *config, uint8_t *frame_data, uint16_t bit_count) {
 	int ret = 0;
+
+	if (bit_count > 255) {
+		fprintf(stderr, "%s: Frame is too long !\n", HARDWARE_NAME);
+		return -1;
+	}
 
 	ret = he853_configure(config, frame_data, (uint8_t) bit_count);
 	if (ret < 0) {

@@ -74,7 +74,7 @@ struct rf_hardware_driver {
 	int (*probe)(void);
 	int (*init)(void);
 	void (*close)(void);
-	int (*send_cmd)(struct timing_config *config, uint8_t *frame_data, uint8_t bit_count);
+	int (*send_cmd)(struct timing_config *config, uint8_t *frame_data, uint16_t bit_count);
 };
 
 struct rf_protocol_driver {

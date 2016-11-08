@@ -316,7 +316,7 @@ static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t com
 		dbg_printf(1, "\n");
 	}
 
-	ret = current_hw_driver->send_cmd(protocol_driver->timings, data, (uint8_t) data_bit_count);
+	ret = current_hw_driver->send_cmd(protocol_driver->timings, data, (uint16_t) data_bit_count);
 	if (ret < 0) {
 		fprintf(stderr, "%s - %s: configuration failed\n", current_hw_driver->name, protocol_driver->name);
 		return ret;
