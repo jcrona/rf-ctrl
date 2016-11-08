@@ -52,6 +52,8 @@ The supported protocols are:
 - Auchan (found in the French Auchan store, and probably sold under different brands)
 - Auchan2 (also found in the French Auchan store, and probably sold under different brands)
 - Sumtech (not sure were it can be found, it is a pure chinese product like Idk)
+- Blyss (found in french Castorama store)
+- Somfy (RTS 433,42 MHz only)
 
 
 ## Usage
