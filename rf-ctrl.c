@@ -58,8 +58,8 @@ char *(parameter_str[]) = {
 char *(rf_command_str[]) = {
 	"OFF",
 	"ON",
-	"Group ON",
 	"Group OFF",
+	"Group ON",
 	"Prog",
 	"F1",
 	"F2",
@@ -69,8 +69,8 @@ char *(rf_command_str[]) = {
 char *(rf_cmdline_command_str[]) = {
 	"off",
 	"on",
-	"gon",
 	"goff",
+	"gon",
 	"prog",
 	"f1",
 	"f2",
