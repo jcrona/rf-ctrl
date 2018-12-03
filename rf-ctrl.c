@@ -355,7 +355,7 @@ static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t com
 		printf(", using remote ID %u", remote_code);
 	}
 
-	printf("...\n");
+	printf(" ...\n");
 
 	if (is_dbg_enabled(3)) {
 		dbg_printf(3, "  Timings (%s): Bit Format %s - Frame Count %u\n", protocol_driver->name,
@@ -433,7 +433,7 @@ static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t com
 static void usage(FILE * fp, int argc, char **argv) {
 	int i;
 
-	fprintf(fp,
+	fprintf(fp,"\n"
 		APP_NAME" v"APP_VERSION" - (C)"COPYRIGHT_DATE" "AUTHOR_NAME"\n\n"
 		"Usage: %s [options]\n\n"
 		"Options:\n"
@@ -479,7 +479,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 		"Examples:\n"
 		"Turning off the DI-O device number 3 paired to the remote ID 424242:\n"
 		"  $ %s -p dio -r 424242 -d 3 -c off\n\n"
-		"Starting a fast RF scan on every OTAX devices, sending the 'on' command:\n"
+		"Starting a fast RF scan on every OTAX devices, sending the 'ON' command:\n"
 		"  $ %s -p otax -c on -s -n 1\n\n",
 		argv[0], argv[0]);
 
@@ -644,7 +644,7 @@ int main(int argc, char **argv)
 	}
 
 	if (nframe > 0) {
-		printf("Number of frames forced to %d...\n", nframe);
+		printf("Number of frames forced to %d\n", nframe);
 	}
 
 	if (provided_params & PARAM_SCAN) {
