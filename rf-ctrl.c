@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <unistd.h>
 
 #include "rf-ctrl.h"
 
