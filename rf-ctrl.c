@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include "rf-ctrl.h"
+#include "raw.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -42,6 +43,8 @@
 #define STORAGE_PATH_BASE		"."APP_NAME
 
 #define MAX_FRAME_LENGTH		512
+
+#define RAW_FALLBACK_ACCURACY		10 // This changes how accurate will be the base_time for generated RAW frames (allowed error in % of the smallest timing)
 
 /* WARNING: Needs to remain in-sync with PARAM_* defines in rf-ctrl.h */
 char *(parameter_str[]) = {
@@ -262,10 +265,73 @@ static int get_cmd_id_by_name(char *cmd_str) {
 	return -1;
 }
 
+static int gcd(uint16_t a, uint16_t b, uint16_t accuracy) {
+	if (a <= accuracy) {
+		return b;
+	}
+
+	return gcd(b % a, a, accuracy);
+}
+
+static uint16_t find_best_base_time(struct timing_config *config) {
+	uint16_t gcd1, gcd2, gcd3, gcd4;
+	uint16_t accuracy = 0xFFFF;
+
+	if ((config->start_bit_h_time > 0) && (accuracy > config->start_bit_h_time)) {
+		accuracy = config->start_bit_h_time;
+	}
+
+	if ((config->start_bit_l_time > 0) && (accuracy > config->start_bit_l_time)) {
+		accuracy = config->start_bit_l_time;
+	}
+
+	if ((config->end_bit_h_time > 0) && (accuracy > config->end_bit_h_time)) {
+		accuracy = config->end_bit_h_time;
+	}
+
+	if ((config->end_bit_l_time > 0) && (accuracy > config->end_bit_l_time)) {
+		accuracy = config->end_bit_l_time;
+	}
+
+	if ((config->data_bit0_h_time > 0) && (accuracy > config->data_bit0_h_time)) {
+		accuracy = config->data_bit0_h_time;
+	}
+
+	if ((config->data_bit0_l_time > 0) && (accuracy > config->data_bit0_l_time)) {
+		accuracy = config->data_bit0_l_time;
+	}
+
+	if ((config->data_bit1_h_time > 0) && (accuracy > config->data_bit1_h_time)) {
+		accuracy = config->data_bit1_h_time;
+	}
+
+	if ((config->data_bit1_l_time > 0) && (accuracy > config->data_bit1_l_time)) {
+		accuracy = config->data_bit1_l_time;
+	}
+
+	accuracy = (accuracy * RAW_FALLBACK_ACCURACY)/100;
+
+	dbg_printf(3, "  RAW Accuracy: %u us (%u%%)\n", accuracy, RAW_FALLBACK_ACCURACY);
+
+	gcd1 = gcd(config->start_bit_h_time, config->start_bit_l_time, accuracy);
+	gcd2 = gcd(config->end_bit_h_time, config->end_bit_l_time, accuracy);
+	gcd3 = gcd(config->data_bit0_h_time, config->data_bit0_l_time, accuracy);
+	gcd4 = gcd(config->data_bit1_h_time, config->data_bit1_l_time, accuracy);
+
+	gcd1 = gcd(gcd1, gcd2, accuracy);
+	gcd3 = gcd(gcd3, gcd4, accuracy);
+
+	return (uint16_t) gcd(gcd1, gcd3, accuracy);
+}
+
 static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t command, int protocol) {
 	struct rf_protocol_driver *protocol_driver;
 	uint8_t data[MAX_FRAME_LENGTH];
 	int data_bit_count;
+	struct timing_config fallback_timings;
+	uint8_t fallback_data[MAX_FRAME_LENGTH];
+	int fallback_data_bit_count;
+	uint16_t base_time;
 	int ret = 0;
 	int i;
 
@@ -321,7 +387,39 @@ static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t com
 		dbg_printf(1, "\n");
 	}
 
-	ret = current_hw_driver->send_cmd(protocol_driver->timings, data, (uint16_t) data_bit_count);
+	if (!(current_hw_driver->supported_bit_fmts & (1 << protocol_driver->timings->bit_fmt))) {
+		if (current_hw_driver->supported_bit_fmts & (1 << RF_BIT_FMT_RAW)) {
+			dbg_printf(1, "\n  Requested bit format not supported by %s, falling back to RAW\n", current_hw_driver->name);
+
+			/* Generate a RAW frame */
+			base_time = find_best_base_time(protocol_driver->timings);
+
+			fallback_data_bit_count = raw_generate_hl_frame(fallback_data, sizeof(fallback_data), protocol_driver->timings, data, (uint16_t) data_bit_count, base_time);
+
+			fallback_timings.base_time = base_time;
+			fallback_timings.bit_fmt = RF_BIT_FMT_RAW;
+			fallback_timings.frame_count = protocol_driver->timings->frame_count;
+
+			if (is_dbg_enabled(1)) {
+				dbg_printf(3, "  RAW Timings (%s): Base HLTime %u us\n", protocol_driver->name,
+						fallback_timings.base_time);
+
+				dbg_printf(1, "  RAW Frame data (%s):", protocol_driver->name);
+				for (i = 0; i < (fallback_data_bit_count + 7)/8; i++) {
+					dbg_printf(1, " %02X", fallback_data[i]);
+				}
+				dbg_printf(1, "\n");
+			}
+
+			ret = current_hw_driver->send_cmd(&fallback_timings, fallback_data, (uint16_t) fallback_data_bit_count);
+		} else {
+			fprintf(stderr, "%s - %s: Bit format %u not supported\n", current_hw_driver->name, protocol_driver->name, protocol_driver->timings->bit_fmt);
+			return -1;
+		}
+	} else {
+		ret = current_hw_driver->send_cmd(protocol_driver->timings, data, (uint16_t) data_bit_count);
+	}
+
 	if (ret < 0) {
 		fprintf(stderr, "%s - %s: configuration failed\n", current_hw_driver->name, protocol_driver->name);
 		return ret;

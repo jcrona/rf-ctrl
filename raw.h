@@ -31,5 +31,6 @@ size_t raw_write_low(uint8_t *buf, size_t offset, uint8_t length);
 size_t raw_write_high(uint8_t *buf, size_t offset, uint8_t length);
 size_t raw_write_edge(uint8_t *buf, size_t offset, raw_edge_order_t order, uint8_t h_len, uint8_t l_len);
 size_t raw_write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_bit_len, raw_edge_order_t zero_order, uint8_t zero_h_len, uint8_t zero_l_len, raw_edge_order_t one_order, uint8_t one_h_len, uint8_t one_l_len);
+int raw_generate_hl_frame(uint8_t *dest_frame_data, size_t dest_data_len, struct timing_config *config, uint8_t *src_frame_data, uint16_t src_bit_count, uint16_t base_time);
 
 #endif /* _RAW_H_ */

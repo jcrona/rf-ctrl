@@ -21,7 +21,7 @@ endif
 CC=$(GNU_PREFIX)gcc
 LD=$(GNU_PREFIX)ld
 
-LDLIBS = -lusb-1.0 -lpthread
+LDLIBS = -lusb-1.0 -lpthread -lm
 
 ifeq ($(USE_EXTERNAL_LIBICONV), true)
 	LDLIBS += -liconv

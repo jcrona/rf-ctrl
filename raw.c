@@ -23,7 +23,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
 
+#include "rf-ctrl.h"
 #include "raw.h"
 
 
@@ -76,4 +78,43 @@ size_t raw_write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_bi
 	}
 
 	return (count - offset);
+}
+
+int raw_generate_hl_frame(uint8_t *dest_frame_data, size_t dest_data_len, struct timing_config *config, uint8_t *src_frame_data, uint16_t src_bit_count, uint16_t base_time) {
+	uint16_t i;
+	size_t count = 0;
+	raw_edge_order_t order = (config->bit_fmt == RF_BIT_FMT_HL) ? RAW_EDGE_ORDER_HL : RAW_EDGE_ORDER_LH;
+	uint8_t start_h_len = round(config->start_bit_h_time/base_time);
+	uint8_t start_l_len = round(config->start_bit_l_time/base_time);
+	uint8_t end_h_len = round(config->end_bit_h_time/base_time);
+	uint8_t end_l_len = round(config->end_bit_l_time/base_time);
+	uint8_t zero_h_len = round(config->data_bit0_h_time/base_time);
+	uint8_t zero_l_len = round(config->data_bit0_l_time/base_time);
+	uint8_t one_h_len = round(config->data_bit1_h_time/base_time);
+	uint8_t one_l_len = round(config->data_bit1_l_time/base_time);
+
+	/* Compute the final length of the frame */
+	count = 0;
+	for (i = 0; i < src_bit_count; i++) {
+		if (src_frame_data[i/8] & (1 << (i % 8))) {
+			count++;
+		}
+	}
+
+	count = start_h_len + start_l_len + end_h_len + end_l_len +
+			(zero_h_len + zero_l_len) * (src_bit_count - count) +
+			(one_h_len + one_l_len) * count;
+
+	if (count > (dest_data_len * 8)) {
+		fprintf(stderr, "RAW buffer to small (%lu bits) for this frame (%lu bits)\n", dest_data_len * 8, count);
+		return -1;
+	}
+
+	/* Generate the RAW frame */
+	count = 0;
+	count += raw_write_edge(dest_frame_data, count, order, start_h_len, start_l_len);
+	count += raw_write_bits(dest_frame_data, count, src_frame_data, src_bit_count, order, zero_h_len, zero_l_len, order, one_h_len, one_l_len);
+	count += raw_write_edge(dest_frame_data, count, order, end_h_len, end_l_len);
+
+	return count;
 }
