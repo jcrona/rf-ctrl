@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "rf-ctrl.h"
+#include "raw.h"
 
 #define PROTOCOL_NAME		"Somfy RTS"
 
@@ -33,74 +34,19 @@
 struct rf_protocol_driver somfy_driver;
 
 
-static size_t write_low(uint8_t *buf, size_t offset, uint8_t length) {
-	size_t i;
-
-	for (i = offset; i < (offset + length); i++) {
-		buf[i/8] &= ~(1 << (7 - (i % 8)));
-	}
-
-	return length;
-}
-
-static size_t write_high(uint8_t *buf, size_t offset, uint8_t length) {
-	size_t i;
-
-	for (i = offset; i < (offset + length); i++) {
-		buf[i/8] |= 1 << (7 - (i % 8));
-	}
-
-	return length;
-}
-
-static size_t write_bit_zero(uint8_t *buf, size_t offset) {
-	size_t count = offset;
-
-	/* High, then low */
-	count += write_high(buf, count, 1);
-	count += write_low(buf, count, 1);
-
-	return (count - offset);
-}
-
-static size_t write_bit_one(uint8_t *buf, size_t offset) {
-	size_t count = offset;
-
-	/* Low, then high */
-	count += write_low(buf, count, 1);
-	count += write_high(buf, count, 1);
-
-	return (count - offset);
-}
-
 static size_t write_pulses(uint8_t *buf, size_t offset, uint8_t pulses) {
 	size_t count = offset;
 	uint8_t i;
 
 	/* Starting pulses (4 x high, 4 x low) */
 	for (i = 0; i < pulses; i++) {
-		count += write_high(buf, count, 4);
-		count += write_low(buf, count, 4);
+		count += raw_write_high(buf, count, 4);
+		count += raw_write_low(buf, count, 4);
 	}
 
 	/* Sync pulse (8 x high, 1 x low) */
-	count += write_high(buf, count, 8);
-	count += write_low(buf, count, 1);
-
-	return (count - offset);
-}
-
-static size_t write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_len) {
-	size_t count = offset;
-	size_t i;
-
-	for (i = 0; i < (data_len * 8); i++) {
-		if ((data[i/8] & (1 << (7 - (i % 8)))) != 0) {
-			count += write_bit_one(buf, count);
-		} else {
-			count += write_bit_zero(buf, count);
-		}
-	}
+	count += raw_write_high(buf, count, 8);
+	count += raw_write_low(buf, count, 1);
 
 	return (count - offset);
 }
@@ -135,7 +81,7 @@ static size_t write_data(uint8_t *buf, size_t offset, uint16_t rolling_code, uin
 		data[i] = data[i] ^ data[i - 1];
 	}
 
-	count += write_bits(buf, count, data, 7);
+	count += raw_write_bits(buf, count, data, 7);
 
 	return (count - offset);
 }
@@ -212,8 +158,8 @@ static int somfy_format_cmd(uint8_t *data, size_t data_len, uint32_t remote_code
 		if (i == 0) {
 			/* First frame */
 			/* Big starting pulse (16 x high, 12 x low) */
-			count += write_high(data, count, 16);
-			count += write_low(data, count, 12);
+			count += raw_write_high(data, count, 16);
+			count += raw_write_low(data, count, 12);
 
 			/* Then 2 regular starting pulses */
 			count += write_pulses(data, count, 2);
@@ -226,7 +172,7 @@ static int somfy_format_cmd(uint8_t *data, size_t data_len, uint32_t remote_code
 		count += write_data(data, count, rolling_code, remote_code, device_code, raw_cmd);
 
 		/* Gap before the next frame (48 x low = ~30ms) */
-		count += write_low(data, count, 48);
+		count += raw_write_low(data, count, 48);
 	}
 
 	return bit_count;
