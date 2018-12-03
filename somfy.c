@@ -81,7 +81,11 @@ static size_t write_data(uint8_t *buf, size_t offset, uint16_t rolling_code, uin
 		data[i] = data[i] ^ data[i - 1];
 	}
 
-	count += raw_write_bits(buf, count, data, 7);
+	/*
+	 * RAW frame generation
+	 * All bit periods are the same (1 * 625 us), 0 format is LH, 1 format is HL
+	 */
+	count += raw_write_bits(buf, count, data, 7 * 8, RAW_EDGE_ORDER_LH, 1, 1, RAW_EDGE_ORDER_HL, 1, 1);
 
 	return (count - offset);
 }

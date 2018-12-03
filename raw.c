@@ -47,35 +47,31 @@ size_t raw_write_high(uint8_t *buf, size_t offset, uint8_t length) {
 	return length;
 }
 
-size_t raw_write_bit_zero(uint8_t *buf, size_t offset) {
+size_t raw_write_edge(uint8_t *buf, size_t offset, raw_edge_order_t order, uint8_t h_len, uint8_t l_len) {
 	size_t count = offset;
 
-	/* High, then low */
-	count += raw_write_high(buf, count, 1);
-	count += raw_write_low(buf, count, 1);
+	if (order == RAW_EDGE_ORDER_HL) {
+		/* High, then low */
+		count += raw_write_high(buf, count, h_len);
+		count += raw_write_low(buf, count, l_len);
+	} else {
+		/* Low, then high */
+		count += raw_write_low(buf, count, l_len);
+		count += raw_write_high(buf, count, h_len);
+	}
 
 	return (count - offset);
 }
 
-size_t raw_write_bit_one(uint8_t *buf, size_t offset) {
-	size_t count = offset;
-
-	/* Low, then high */
-	count += raw_write_low(buf, count, 1);
-	count += raw_write_high(buf, count, 1);
-
-	return (count - offset);
-}
-
-size_t raw_write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_len) {
+size_t raw_write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_bit_len, raw_edge_order_t zero_order, uint8_t zero_h_len, uint8_t zero_l_len, raw_edge_order_t one_order, uint8_t one_h_len, uint8_t one_l_len) {
 	size_t count = offset;
 	size_t i;
 
-	for (i = 0; i < (data_len * 8); i++) {
+	for (i = 0; i < data_bit_len; i++) {
 		if ((data[i/8] & (1 << (7 - (i % 8)))) != 0) {
-			count += raw_write_bit_one(buf, count);
+			count += raw_write_edge(buf, count, one_order, one_h_len, one_l_len);
 		} else {
-			count += raw_write_bit_zero(buf, count);
+			count += raw_write_edge(buf, count, zero_order, zero_h_len, zero_l_len);
 		}
 	}
 

@@ -22,10 +22,14 @@
 #ifndef _RAW_H_
 #define _RAW_H_
 
+typedef enum {
+	RAW_EDGE_ORDER_HL =		0,
+	RAW_EDGE_ORDER_LH =		1,
+} raw_edge_order_t;
+
 size_t raw_write_low(uint8_t *buf, size_t offset, uint8_t length);
 size_t raw_write_high(uint8_t *buf, size_t offset, uint8_t length);
-size_t raw_write_bit_zero(uint8_t *buf, size_t offset);
-size_t raw_write_bit_one(uint8_t *buf, size_t offset);
-size_t raw_write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_len);
+size_t raw_write_edge(uint8_t *buf, size_t offset, raw_edge_order_t order, uint8_t h_len, uint8_t l_len);
+size_t raw_write_bits(uint8_t *buf, size_t offset, uint8_t *data, size_t data_bit_len, raw_edge_order_t zero_order, uint8_t zero_h_len, uint8_t zero_l_len, raw_edge_order_t one_order, uint8_t one_h_len, uint8_t one_l_len);
 
 #endif /* _RAW_H_ */
