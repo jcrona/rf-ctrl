@@ -47,7 +47,7 @@ static int sysfs_gpio_probe(void) {
 	return -1;
 }
 
-static int sysfs_gpio_init(void) {
+static int sysfs_gpio_init(struct rf_hardware_params *params) {
 	FILE *f;
 	char path[256];
 

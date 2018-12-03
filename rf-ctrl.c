@@ -522,6 +522,7 @@ int main(int argc, char **argv)
 	uint8_t needed_params = PARAM_PROTOCOL | PARAM_REMOTE_ID | PARAM_DEVICE_ID | PARAM_COMMAND;
 	uint16_t provided_params = 0;
 	uint32_t proto_first = 0, proto_last = 0, remote_first = 0, remote_last = 0, device_first = 0, device_last = 0;
+	struct rf_hardware_params hw_params;
 	char * p;
 	uint32_t i, j, k;
 
@@ -662,9 +663,22 @@ int main(int argc, char **argv)
 		}
 	}
 
+	hw_params.provided_params = provided_params;
+
+	if (current_hw_driver->needed_hw_params & ~(provided_params)) {
+		fprintf(stderr, "Missing arguments specific to the %s driver:", current_hw_driver->name);
+		for (i = 0; i < ARRAY_SIZE(parameter_str); i++) {
+			if ((current_hw_driver->needed_hw_params & ~(provided_params)) & (0x1 << i)) {
+				fprintf(stderr, " %s", parameter_str[i]);
+			}
+		}
+		fprintf(stderr, " !\n");
+		usage(stderr, argc, argv);
+		return -1;
+	}
 
 	printf("Initializing %s driver...\n", current_hw_driver->long_name);
-	ret = current_hw_driver->init();
+	ret = current_hw_driver->init(&hw_params);
 	if (ret < 0) {
 		fprintf(stderr, "Cannot initialize %s driver\n", current_hw_driver->name);
 		goto exit;

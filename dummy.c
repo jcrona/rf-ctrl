@@ -38,7 +38,7 @@ static int dummy_probe(void) {
 	return -1;
 }
 
-static int dummy_init(void) {
+static int dummy_init(struct rf_hardware_params *params) {
 	return 0;
 }
 

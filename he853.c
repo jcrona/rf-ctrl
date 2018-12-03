@@ -63,7 +63,7 @@ static int he853_probe(void) {
 	return 0;
 }
 
-static int he853_init(void) {
+static int he853_init(struct rf_hardware_params *params) {
 	if (handle != NULL) {
 		dbg_printf(1, "%s device already initialized\n", HARDWARE_NAME);
 		return 0;

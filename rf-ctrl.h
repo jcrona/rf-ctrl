@@ -30,7 +30,8 @@
 #define PARAM_NFRAME			0X0040
 #define PARAM_ACCURACY			0X0080
 #define PARAM_RAW			0X0100
-#define PARAM_VERBOSE			0X0200
+#define PARAM_GPIO			0X0200
+#define PARAM_VERBOSE			0X0400
 
 #define STORAGE_PATH_MAX_LEN		512
 
@@ -69,13 +70,20 @@ struct timing_config {
 	uint8_t frame_count;
 };
 
+/* List of parameters that a hardware driver might use */
+struct rf_hardware_params {
+	uint8_t gpio;
+	uint16_t provided_params;
+};
+
 struct rf_hardware_driver {
 	char *name;
 	char *cmd_name;
 	char *long_name;
 	uint8_t supported_bit_fmts;
+	uint16_t needed_hw_params;
 	int (*probe)(void);
-	int (*init)(void);
+	int (*init)(struct rf_hardware_params *params);
 	void (*close)(void);
 	int (*send_cmd)(struct timing_config *config, uint8_t *frame_data, uint16_t bit_count);
 };

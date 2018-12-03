@@ -51,7 +51,7 @@ static int ook_gpio_probe(void) {
 	return 0;
 }
 
-static int ook_gpio_init(void) {
+static int ook_gpio_init(struct rf_hardware_params *params) {
 	return 0;
 }
 
