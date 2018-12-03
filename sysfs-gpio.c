@@ -97,6 +97,7 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 	int fd;
 	char path[256];
 	uint16_t i;
+	char old_bit, new_bit;
 
 	snprintf(path, 256, "%s/gpio%u/%s", GPIO_SYSFS_ROOT, TRANSMITTER_GPIO_NUM, GPIO_SYSFS_VALUE);
 
@@ -106,16 +107,84 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 		return fd;
 	}
 
+	switch (config->bit_fmt) {
+		case RF_BIT_FMT_HL:
+			write(fd, "1", 1);
+			usleep(config->start_bit_h_time);
+			write(fd, "0", 1);
+			usleep(config->start_bit_l_time);
+			break;
+
+		case RF_BIT_FMT_LH:
+			write(fd, "0", 1);
+			usleep(config->start_bit_l_time);
+			write(fd, "1", 1);
+			usleep(config->start_bit_h_time);
+			break;
+	}
+
 	/* Toggle the GPIO bit by bit */
 	for (i = 0; i < bit_count; i++) {
-		if (frame_data[i/8] & (1 << (7 - (i % 8)))) {
-			write(fd, "1", 1);
-		} else {
-			write(fd, "0", 1);
-		}
+		new_bit = (frame_data[i/8] & (1 << (7 - (i % 8)))) ? '1' : '0';
 
-		usleep(config->base_time);
+		switch (config->bit_fmt) {
+			case RF_BIT_FMT_HL:
+				if (new_bit == '1') {
+					write(fd, "1", 1);
+					usleep(config->data_bit1_h_time);
+					write(fd, "0", 1);
+					usleep(config->data_bit1_l_time);
+				} else {
+					write(fd, "1", 1);
+					usleep(config->data_bit0_h_time);
+					write(fd, "0", 1);
+					usleep(config->data_bit0_l_time);
+				}
+				break;
+
+			case RF_BIT_FMT_LH:
+				if (new_bit == '1') {
+					write(fd, "0", 1);
+					usleep(config->data_bit1_l_time);
+					write(fd, "1", 1);
+					usleep(config->data_bit1_h_time);
+				} else {
+					write(fd, "0", 1);
+					usleep(config->data_bit0_l_time);
+					write(fd, "1", 1);
+					usleep(config->data_bit0_h_time);
+				}
+				break;
+
+			case RF_BIT_FMT_RAW:
+				if (new_bit != old_bit) {
+					old_bit = new_bit;
+					write(fd, &new_bit, 1);
+				}
+
+				usleep(config->base_time);
+				break;
+		}
 	}
+
+	switch (config->bit_fmt) {
+		case RF_BIT_FMT_HL:
+			write(fd, "1", 1);
+			usleep(config->end_bit_h_time);
+			write(fd, "0", 1);
+			usleep(config->end_bit_l_time);
+			break;
+
+		case RF_BIT_FMT_LH:
+			write(fd, "0", 1);
+			usleep(config->end_bit_l_time);
+			write(fd, "1", 1);
+			usleep(config->end_bit_h_time);
+			break;
+	}
+
+	/* Make sure to turn off the transmitter */
+	write(fd, "0", 1);
 
 	close(fd);
 
@@ -126,7 +195,7 @@ struct rf_hardware_driver sysfs_gpio_driver = {
 	.name = HARDWARE_NAME,
 	.cmd_name = "sysfs-gpio",
 	.long_name = "SYSFS GPIO-based 433 MHz RF Transmitter",
-	.supported_bit_fmts = (1 << RF_BIT_FMT_RAW),
+	.supported_bit_fmts = (1 << RF_BIT_FMT_HL) | (1 << RF_BIT_FMT_LH) | (1 << RF_BIT_FMT_RAW),
 	.probe = &sysfs_gpio_probe,
 	.init = &sysfs_gpio_init,
 	.close = &sysfs_gpio_close,
