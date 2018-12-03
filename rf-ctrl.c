@@ -104,6 +104,7 @@ extern struct rf_protocol_driver blyss_driver;
 
 extern struct rf_hardware_driver he853_driver;
 extern struct rf_hardware_driver ook_gpio_driver;
+extern struct rf_hardware_driver sysfs_gpio_driver;
 extern struct rf_hardware_driver dummy_driver;
 
 struct rf_protocol_driver *(protocol_drivers[]) = {
@@ -121,6 +122,7 @@ struct rf_protocol_driver *(protocol_drivers[]) = {
 struct rf_hardware_driver *(hardware_drivers[]) = {
 	&he853_driver,
 	&ook_gpio_driver,
+	&sysfs_gpio_driver,
 	&dummy_driver,
 };
 

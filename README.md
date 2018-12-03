@@ -43,6 +43,7 @@ Now, if you run `$ make menuconfig` from the __openwrt__ root folder, you should
 The supported transmitters are:
 - HE853 : the ELRO/Home Easy USB dongle
 - OOK-GPIO : any 1$ 433MHz transmitters connected to a GPIO ([ook-gpio](https://github.com/jcrona/ook-gpio) kernel driver required)
+- SYSFS-GPIO : any 1$ 433MHz transmitters connected to a GPIO (using the standard SYSFS GPIO interface)
 
 The supported protocols are:
 - DI-O

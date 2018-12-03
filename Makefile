@@ -32,7 +32,7 @@ ifeq ($(STATIC), true)
 endif
 
 TARGET = rf-ctrl
-OBJECTS = he853.o ook-gpio.o dummy.o otax.o dio.o home-easy.o idk.o sumtech.o auchan.o auchan2.o somfy.o blyss.o rf-ctrl.o hid-libusb.o raw.o
+OBJECTS = he853.o ook-gpio.o sysfs-gpio.o dummy.o otax.o dio.o home-easy.o idk.o sumtech.o auchan.o auchan2.o somfy.o blyss.o rf-ctrl.o hid-libusb.o raw.o
 
 all: $(TARGET)
 
