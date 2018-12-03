@@ -148,7 +148,7 @@ static int ook_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data, 
 struct rf_hardware_driver ook_gpio_driver = {
 	.name = HARDWARE_NAME,
 	.cmd_name = "ook-gpio",
-	.long_name = "OOK GPIO-based 433 MHz RF Transeiver",
+	.long_name = "OOK GPIO-based 433 MHz RF Transmitter",
 	.supported_bit_fmts = (1 << RF_BIT_FMT_HL) | (1 << RF_BIT_FMT_LH) | (1 << RF_BIT_FMT_RAW),
 	.probe = &ook_gpio_probe,
 	.init = &ook_gpio_init,
