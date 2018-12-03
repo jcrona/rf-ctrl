@@ -88,7 +88,7 @@ char *(rf_bit_fmt_str[]) = {
 	"Raw",
 };
 
-struct rf_hardware_driver *current_hw_driver = NULL;
+static struct rf_hardware_driver *current_hw_driver = NULL;
 
 static int debug_level = 0;
 
