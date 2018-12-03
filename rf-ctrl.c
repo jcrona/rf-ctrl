@@ -44,7 +44,7 @@
 
 #define MAX_FRAME_LENGTH		512
 
-#define RAW_FALLBACK_ACCURACY		10 // This changes how accurate will be the base_time for generated RAW frames (allowed error in % of the smallest timing)
+#define DEFAULT_RAW_FALLBACK_ACCURACY	90 // This changes how accurate will be the base_time for generated RAW frames (100 minus the allowed error in % of the shortest timing)
 
 /* WARNING: Needs to remain in-sync with PARAM_* defines in rf-ctrl.h */
 char *(parameter_str[]) = {
@@ -55,6 +55,8 @@ char *(parameter_str[]) = {
 	"command",
 	"scan",
 	"nframe",
+	"accuracy",
+	"raw",
 	"verbose",
 };
 
@@ -91,6 +93,8 @@ char *(rf_bit_fmt_str[]) = {
 static struct rf_hardware_driver *current_hw_driver = NULL;
 
 static int debug_level = 0;
+
+static uint8_t raw_fallback_accuracy = DEFAULT_RAW_FALLBACK_ACCURACY;
 
 extern struct rf_protocol_driver otax_driver;
 extern struct rf_protocol_driver dio_driver;
@@ -311,9 +315,9 @@ static uint16_t find_best_base_time(struct timing_config *config) {
 		accuracy = config->data_bit1_l_time;
 	}
 
-	accuracy = (accuracy * RAW_FALLBACK_ACCURACY)/100;
+	accuracy = (accuracy * (100 - raw_fallback_accuracy))/100;
 
-	dbg_printf(3, "  RAW Accuracy: %u us (%u%%)\n", accuracy, RAW_FALLBACK_ACCURACY);
+	dbg_printf(3, "  RAW Accuracy: %u us (%u%%)\n", accuracy, raw_fallback_accuracy);
 
 	gcd1 = gcd(config->start_bit_h_time, config->start_bit_l_time, accuracy);
 	gcd2 = gcd(config->end_bit_h_time, config->end_bit_l_time, accuracy);
@@ -326,7 +330,7 @@ static uint16_t find_best_base_time(struct timing_config *config) {
 	return (uint16_t) gcd(gcd1, gcd3, accuracy);
 }
 
-static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t command, int protocol) {
+static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t command, int protocol, uint8_t force_raw) {
 	struct rf_protocol_driver *protocol_driver;
 	uint8_t data[MAX_FRAME_LENGTH];
 	int data_bit_count;
@@ -389,9 +393,12 @@ static int send_cmd(uint32_t remote_code, uint32_t device_code, rf_command_t com
 		dbg_printf(1, "\n");
 	}
 
-	if (!(current_hw_driver->supported_bit_fmts & (1 << protocol_driver->timings->bit_fmt))) {
+	if (protocol_driver->timings->bit_fmt != RF_BIT_FMT_RAW && (!(current_hw_driver->supported_bit_fmts & (1 << protocol_driver->timings->bit_fmt)) || force_raw)) {
 		if (current_hw_driver->supported_bit_fmts & (1 << RF_BIT_FMT_RAW)) {
-			dbg_printf(1, "\n  Requested bit format not supported by %s, falling back to RAW\n", current_hw_driver->name);
+			dbg_printf(1, "\n");
+			if (!force_raw) {
+				dbg_printf(1, "  Requested bit format not supported by %s, falling back to RAW\n", current_hw_driver->name);
+			}
 
 			/* Generate a RAW frame */
 			base_time = find_best_base_time(protocol_driver->timings);
@@ -444,9 +451,11 @@ static void usage(FILE * fp, int argc, char **argv) {
 		"  -c | --command <command>   Command to send\n"
 		"  -s | --scan                Perform a brute force scan (-p, -r and -d can be used to force specific values)\n"
 		"  -n | --nframe <0-255>      Number of frames to send (override per protocol default value)\n"
+		"  -a | --accuracy <0-100>    Accuracy of the timings in percent when HL frames are converted to RAW (default %u%%)\n"
+		"  -R | --raw                 Convert HL frames to RAW if possible\n"
 		"  -v | --verbose             Print more detailed information (-vv and -vvv for even more details)\n"
 		"  -h | --help                Print this message\n\n",
-		argv[0]);
+		argv[0], DEFAULT_RAW_FALLBACK_ACCURACY);
 
 	fprintf(fp, "Available hardware drivers:");
 	for (i = 0; i < ARRAY_SIZE(hardware_drivers); i++) {
@@ -485,7 +494,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 
 }
 
-static const char short_options[] = "H:p:r:d:c:sn:vh";
+static const char short_options[] = "H:p:r:d:c:sn:a:Rvh";
 
 static const struct option long_options[] = {
 	{"hw", required_argument, NULL, 'H'},
@@ -495,6 +504,8 @@ static const struct option long_options[] = {
 	{"command", required_argument, NULL, 'c'},
 	{"scan", no_argument, NULL, 's'},
 	{"nframe", required_argument, NULL, 'n'},
+	{"accuracy", required_argument, NULL, 'a'},
+	{"raw", no_argument, NULL, 'R'},
 	{"verbose", required_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
 	{0, 0, 0, 0}
@@ -506,9 +517,10 @@ int main(int argc, char **argv)
 	int hw = -1;
 	int nframe = -1;
 	int protocol = -1, command = -1;
+	uint8_t force_raw = 0;
 	uint32_t remote_id = 0, device_id = 0;
 	uint8_t needed_params = PARAM_PROTOCOL | PARAM_REMOTE_ID | PARAM_DEVICE_ID | PARAM_COMMAND;
-	uint8_t provided_params = 0;
+	uint16_t provided_params = 0;
 	uint32_t proto_first = 0, proto_last = 0, remote_first = 0, remote_last = 0, device_first = 0, device_last = 0;
 	char * p;
 	uint32_t i, j, k;
@@ -593,6 +605,21 @@ int main(int argc, char **argv)
 				provided_params |= PARAM_NFRAME;
 				break;
 
+			case 'a':
+				raw_fallback_accuracy = strtoul(optarg, NULL, 0);
+				if (raw_fallback_accuracy > 100) {
+					fprintf(stderr, "Invalid accuracy %s\n", optarg);
+					usage(stderr, argc, argv);
+					return -1;
+				}
+
+				provided_params |= PARAM_ACCURACY;
+				break;
+
+			case 'R':
+				provided_params |= PARAM_RAW;
+				break;
+
 			case 'v':
 				debug_level++;
 				provided_params |= PARAM_VERBOSE;
@@ -647,6 +674,14 @@ int main(int argc, char **argv)
 		printf("Number of frames forced to %d\n", nframe);
 	}
 
+	if (provided_params & PARAM_RAW) {
+		if (!(current_hw_driver->supported_bit_fmts & (1 << RF_BIT_FMT_RAW))) {
+			printf("Warning: %s does not support the RAW format, ignoring RAW conversion\n", current_hw_driver->name);
+		} else {
+			force_raw = 1;
+		}
+	}
+
 	if (provided_params & PARAM_SCAN) {
 		printf("Scanning");
 
@@ -688,7 +723,7 @@ int main(int argc, char **argv)
 
 			for (j = remote_first; j <= remote_last; j++) {
 				for (k = device_first; k <= device_last; k++) {
-					send_cmd(j, k, (rf_command_t) command, i);
+					send_cmd(j, k, (rf_command_t) command, i, force_raw);
 				}
 			}
 		}
@@ -697,7 +732,7 @@ int main(int argc, char **argv)
 			protocol_drivers[protocol]->timings->frame_count = nframe;
 		}
 
-		ret = send_cmd(remote_id, device_id, (rf_command_t) command, protocol);
+		ret = send_cmd(remote_id, device_id, (rf_command_t) command, protocol, force_raw);
 	}
 
 exit:

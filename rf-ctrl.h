@@ -21,14 +21,16 @@
 #ifndef _RF_CTRL_H_
 #define _RF_CTRL_H_
 
-#define PARAM_HARDWARE			0x01
-#define PARAM_PROTOCOL			0x02
-#define PARAM_REMOTE_ID			0x04
-#define PARAM_DEVICE_ID			0x08
-#define PARAM_COMMAND			0x10
-#define PARAM_SCAN			0X20
-#define PARAM_NFRAME			0X40
-#define PARAM_VERBOSE			0X80
+#define PARAM_HARDWARE			0x0001
+#define PARAM_PROTOCOL			0x0002
+#define PARAM_REMOTE_ID			0x0004
+#define PARAM_DEVICE_ID			0x0008
+#define PARAM_COMMAND			0x0010
+#define PARAM_SCAN			0X0020
+#define PARAM_NFRAME			0X0040
+#define PARAM_ACCURACY			0X0080
+#define PARAM_RAW			0X0100
+#define PARAM_VERBOSE			0X0200
 
 #define STORAGE_PATH_MAX_LEN		512
 
@@ -85,7 +87,7 @@ struct rf_protocol_driver {
 	int (*format_cmd)(uint8_t *data, size_t data_len, uint32_t remote_code, uint32_t device_code, rf_command_t command);
 	uint32_t remote_code_max;
 	uint32_t device_code_max;
-	uint8_t needed_params;
+	uint16_t needed_params;
 };
 
 int is_dbg_enabled(int level);
