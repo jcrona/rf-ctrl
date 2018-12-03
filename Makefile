@@ -13,6 +13,9 @@ STATIC ?= false
 # Use an external implementation of iconv instead of the libc's one
 USE_EXTERNAL_LIBICONV ?= false
 
+# Where to install the software
+INSTALLATION_PATH ?= /usr/local/bin
+
 
 ifeq ($(STATIC), true)
 	LDFLAGS += -static
@@ -42,6 +45,9 @@ $(TARGET): $(OBJECTS)
 	@$(CC) $(CFLAGS) $(LDFLAGS) $+ -o $@ $(LDLIBS)
 	@echo " -> $@"
 	@echo
+
+install:
+	install -D $(TARGET) $(INSTALLATION_PATH)
 
 clean:
 	$(RM) $(OBJECTS) $(TARGET)
