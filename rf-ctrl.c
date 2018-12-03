@@ -1,7 +1,7 @@
 /*
  * rf-ctrl - A command-line tool to control 433MHz OOK based devices
  *
- * Copyright (C) 2016 Jean-Christophe Rona <jc@rona.fr>
+ * Copyright (C) 2018 Jean-Christophe Rona <jc@rona.fr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,7 +35,7 @@
 
 #define APP_NAME			"rf-ctrl"
 #define APP_VERSION			"0.6"
-#define COPYRIGHT_DATE			"2016"
+#define COPYRIGHT_DATE			"2018"
 #define AUTHOR_NAME			"Jean-Christophe Rona"
 
 #define STORAGE_PATH_BASE		"."APP_NAME

@@ -2,7 +2,7 @@
  * rf-ctrl - A command-line tool to control 433MHz OOK based devices
  * Reversed protocol of Auchan wireless plugs
  *
- * Copyright (C) 2016 Jean-Christophe Rona <jc@rona.fr>
+ * Copyright (C) 2018 Jean-Christophe Rona <jc@rona.fr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

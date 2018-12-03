@@ -83,4 +83,4 @@ Check out my [Home-RF](https://github.com/jcrona/home-rf) project for a simple W
 Fell free to visit my [blog](http://blog.rona.fr), and/or send me a mail !
 
 __  
-Copyright (C) 2016 Jean-Christophe Rona
+Copyright (C) 2018 Jean-Christophe Rona

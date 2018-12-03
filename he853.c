@@ -3,7 +3,7 @@
  * ELRO/HomeEasy HE853 USB Dongle driver
  * Thanks to https://github.com/r10r/he853-remote for the HE853 USB commands
  *
- * Copyright (C) 2016 Jean-Christophe Rona <jc@rona.fr>
+ * Copyright (C) 2018 Jean-Christophe Rona <jc@rona.fr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

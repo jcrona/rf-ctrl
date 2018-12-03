@@ -3,7 +3,7 @@
  * Reversed protocol of Home Easy wireless plugs (UNTESTED)
  * Using protocol from https://github.com/r10r/he853-remote
  *
- * Copyright (C) 2016 Jean-Christophe Rona <jc@rona.fr>
+ * Copyright (C) 2018 Jean-Christophe Rona <jc@rona.fr>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
