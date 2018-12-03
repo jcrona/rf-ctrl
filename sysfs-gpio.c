@@ -33,13 +33,13 @@
 
 #define HARDWARE_NAME			"SYSFS GPIO"
 
-#define TRANSMITTER_GPIO_NUM		101
-
 #define GPIO_SYSFS_ROOT			"/sys/class/gpio"
 #define GPIO_SYSFS_EXPORT		"export"		// At root level
 #define GPIO_SYSFS_UNEXPORT		"unexport"		// At root level
 #define GPIO_SYSFS_DIRECTION		"direction"		// At root/gpio<num> level
 #define GPIO_SYSFS_VALUE		"value"			// At root/gpio<num> level
+
+static uint16_t gpio_num;
 
 
 static int sysfs_gpio_probe(void) {
@@ -51,6 +51,15 @@ static int sysfs_gpio_init(struct rf_hardware_params *params) {
 	FILE *f;
 	char path[256];
 
+	if (!(params->provided_params & PARAM_GPIO)) {
+		fprintf(stderr, "%s: GPIO parameter missing !\n", HARDWARE_NAME);
+		return -1;
+	}
+
+	gpio_num = params->gpio;
+
+	printf("%s: Using GPIO %u\n", HARDWARE_NAME, gpio_num);
+
 	/* Export the GPIO used by the transmitter */
 	f = fopen(GPIO_SYSFS_ROOT"/"GPIO_SYSFS_EXPORT, "w");
 	if (f == NULL) {
@@ -58,12 +67,12 @@ static int sysfs_gpio_init(struct rf_hardware_params *params) {
 		return -1;
 	}
 
-	fprintf(f, "%u\n", TRANSMITTER_GPIO_NUM);
+	fprintf(f, "%u\n", gpio_num);
 
 	fclose(f);
 
 	/* Set the direction of the GPIO as output */
-	snprintf(path, 256, "%s/gpio%u/%s", GPIO_SYSFS_ROOT, TRANSMITTER_GPIO_NUM, GPIO_SYSFS_DIRECTION);
+	snprintf(path, 256, "%s/gpio%u/%s", GPIO_SYSFS_ROOT, gpio_num, GPIO_SYSFS_DIRECTION);
 
 	f = fopen(path, "w");
 	if (f == NULL) {
@@ -88,7 +97,7 @@ static void sysfs_gpio_close(void) {
 		return;
 	}
 
-	fprintf(f, "%u\n", TRANSMITTER_GPIO_NUM);
+	fprintf(f, "%u\n", gpio_num);
 
 	fclose(f);
 }
@@ -99,7 +108,7 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 	uint16_t i;
 	char old_bit, new_bit;
 
-	snprintf(path, 256, "%s/gpio%u/%s", GPIO_SYSFS_ROOT, TRANSMITTER_GPIO_NUM, GPIO_SYSFS_VALUE);
+	snprintf(path, 256, "%s/gpio%u/%s", GPIO_SYSFS_ROOT, gpio_num, GPIO_SYSFS_VALUE);
 
 	fd = open(path, O_WRONLY| O_SYNC);
 	if (fd < 0) {
@@ -196,6 +205,7 @@ struct rf_hardware_driver sysfs_gpio_driver = {
 	.cmd_name = "sysfs-gpio",
 	.long_name = "SYSFS GPIO-based 433 MHz RF Transmitter",
 	.supported_bit_fmts = (1 << RF_BIT_FMT_HL) | (1 << RF_BIT_FMT_LH) | (1 << RF_BIT_FMT_RAW),
+	.needed_hw_params = PARAM_GPIO,
 	.probe = &sysfs_gpio_probe,
 	.init = &sysfs_gpio_init,
 	.close = &sysfs_gpio_close,

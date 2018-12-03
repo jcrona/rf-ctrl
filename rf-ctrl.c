@@ -57,6 +57,7 @@ char *(parameter_str[]) = {
 	"nframe",
 	"accuracy",
 	"raw",
+	"gpio",
 	"verbose",
 };
 
@@ -453,6 +454,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 		"  -n | --nframe <0-255>      Number of frames to send (override per protocol default value)\n"
 		"  -a | --accuracy <0-100>    Accuracy of the timings in percent when HL frames are converted to RAW (default %u%%)\n"
 		"  -R | --raw                 Convert HL frames to RAW if possible\n"
+		"  -g | --gpio <num>          Which GPIO to use to transmit the signal (only for hardware drivers supporting it)\n"
 		"  -v | --verbose             Print more detailed information (-vv and -vvv for even more details)\n"
 		"  -h | --help                Print this message\n\n",
 		argv[0], DEFAULT_RAW_FALLBACK_ACCURACY);
@@ -494,7 +496,7 @@ static void usage(FILE * fp, int argc, char **argv) {
 
 }
 
-static const char short_options[] = "H:p:r:d:c:sn:a:Rvh";
+static const char short_options[] = "H:p:r:d:c:sn:a:Rg:vh";
 
 static const struct option long_options[] = {
 	{"hw", required_argument, NULL, 'H'},
@@ -506,6 +508,7 @@ static const struct option long_options[] = {
 	{"nframe", required_argument, NULL, 'n'},
 	{"accuracy", required_argument, NULL, 'a'},
 	{"raw", no_argument, NULL, 'R'},
+	{"gpio", required_argument, NULL, 'g'},
 	{"verbose", required_argument, NULL, 'v'},
 	{"help", no_argument, NULL, 'h'},
 	{0, 0, 0, 0}
@@ -619,6 +622,11 @@ int main(int argc, char **argv)
 
 			case 'R':
 				provided_params |= PARAM_RAW;
+				break;
+
+			case 'g':
+				hw_params.gpio = strtoul(optarg, &p, 0);
+				provided_params |= PARAM_GPIO;
 				break;
 
 			case 'v':
