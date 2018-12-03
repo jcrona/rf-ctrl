@@ -47,6 +47,7 @@ struct rf_hardware_driver dummy_driver = {
 	.name = "Dummy HW",
 	.cmd_name = "dummy",
 	.long_name = "Dummy Hardware",
+	.supported_bit_fmts = (1 << RF_BIT_FMT_HL) | (1 << RF_BIT_FMT_LH) | (1 << RF_BIT_FMT_RAW),
 	.probe = &dummy_probe,
 	.init = &dummy_init,
 	.close = &dummy_close,

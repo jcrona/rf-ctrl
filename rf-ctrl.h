@@ -71,6 +71,7 @@ struct rf_hardware_driver {
 	char *name;
 	char *cmd_name;
 	char *long_name;
+	uint8_t supported_bit_fmts;
 	int (*probe)(void);
 	int (*init)(void);
 	void (*close)(void);

@@ -326,6 +326,7 @@ struct rf_hardware_driver he853_driver = {
 	.name = HARDWARE_NAME,
 	.cmd_name = "he853",
 	.long_name = "HE853 USB RF dongle",
+	.supported_bit_fmts = (1 << RF_BIT_FMT_HL),
 	.probe = &he853_probe,
 	.init = &he853_init,
 	.close = &he853_close,
