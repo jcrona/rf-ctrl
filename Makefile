@@ -13,6 +13,9 @@ STATIC ?= false
 # Use an external implementation of iconv instead of the libc's one
 USE_EXTERNAL_LIBICONV ?= false
 
+# Enable Alsa support
+ENABLE_ALSA ?= true
+
 # Where to install the software
 INSTALLATION_PATH ?= /usr/local/bin
 
@@ -36,6 +39,12 @@ endif
 
 TARGET = rf-ctrl
 OBJECTS = he853.o ook-gpio.o sysfs-gpio.o dummy.o otax.o dio.o home-easy.o idk.o sumtech.o auchan.o auchan2.o somfy.o blyss.o rf-ctrl.o hid-libusb.o raw.o
+
+ifeq ($(ENABLE_ALSA), true)
+	LDLIBS += -lasound
+	CFLAGS += -DALSA_ENABLED
+	OBJECTS += alsa.o
+endif
 
 all: $(TARGET)
 
