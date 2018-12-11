@@ -105,7 +105,7 @@ static void sysfs_gpio_close(void) {
 static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data, uint16_t bit_count) {
 	int fd;
 	char path[256];
-	uint16_t i;
+	uint16_t i, j;
 	char old_bit, new_bit;
 
 	snprintf(path, 256, "%s/gpio%u/%s", GPIO_SYSFS_ROOT, gpio_num, GPIO_SYSFS_VALUE);
@@ -116,80 +116,83 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 		return fd;
 	}
 
-	switch (config->bit_fmt) {
-		case RF_BIT_FMT_HL:
-			write(fd, "1", 1);
-			usleep(config->start_bit_h_time);
-			write(fd, "0", 1);
-			usleep(config->start_bit_l_time);
-			break;
-
-		case RF_BIT_FMT_LH:
-			write(fd, "0", 1);
-			usleep(config->start_bit_l_time);
-			write(fd, "1", 1);
-			usleep(config->start_bit_h_time);
-			break;
-	}
-
-	/* Toggle the GPIO bit by bit */
-	for (i = 0; i < bit_count; i++) {
-		new_bit = (frame_data[i/8] & (1 << (7 - (i % 8)))) ? '1' : '0';
-
+	for (j = 0; j < config->frame_count; j++) {
 		switch (config->bit_fmt) {
 			case RF_BIT_FMT_HL:
-				if (new_bit == '1') {
-					write(fd, "1", 1);
-					usleep(config->data_bit1_h_time);
-					write(fd, "0", 1);
-					usleep(config->data_bit1_l_time);
-				} else {
-					write(fd, "1", 1);
-					usleep(config->data_bit0_h_time);
-					write(fd, "0", 1);
-					usleep(config->data_bit0_l_time);
-				}
+				write(fd, "1", 1);
+				usleep(config->start_bit_h_time);
+				write(fd, "0", 1);
+				usleep(config->start_bit_l_time);
 				break;
 
 			case RF_BIT_FMT_LH:
-				if (new_bit == '1') {
-					write(fd, "0", 1);
-					usleep(config->data_bit1_l_time);
-					write(fd, "1", 1);
-					usleep(config->data_bit1_h_time);
-				} else {
-					write(fd, "0", 1);
-					usleep(config->data_bit0_l_time);
-					write(fd, "1", 1);
-					usleep(config->data_bit0_h_time);
-				}
-				break;
-
-			case RF_BIT_FMT_RAW:
-				if (new_bit != old_bit) {
-					old_bit = new_bit;
-					write(fd, &new_bit, 1);
-				}
-
-				usleep(config->base_time);
+				write(fd, "0", 1);
+				usleep(config->start_bit_l_time);
+				write(fd, "1", 1);
+				usleep(config->start_bit_h_time);
 				break;
 		}
-	}
 
-	switch (config->bit_fmt) {
-		case RF_BIT_FMT_HL:
-			write(fd, "1", 1);
-			usleep(config->end_bit_h_time);
-			write(fd, "0", 1);
-			usleep(config->end_bit_l_time);
-			break;
+		/* Toggle the GPIO bit by bit */
+		old_bit = 'N';
+		for (i = 0; i < bit_count; i++) {
+			new_bit = (frame_data[i/8] & (1 << (7 - (i % 8)))) ? '1' : '0';
 
-		case RF_BIT_FMT_LH:
-			write(fd, "0", 1);
-			usleep(config->end_bit_l_time);
-			write(fd, "1", 1);
-			usleep(config->end_bit_h_time);
-			break;
+			switch (config->bit_fmt) {
+				case RF_BIT_FMT_HL:
+					if (new_bit == '1') {
+						write(fd, "1", 1);
+						usleep(config->data_bit1_h_time);
+						write(fd, "0", 1);
+						usleep(config->data_bit1_l_time);
+					} else {
+						write(fd, "1", 1);
+						usleep(config->data_bit0_h_time);
+						write(fd, "0", 1);
+						usleep(config->data_bit0_l_time);
+					}
+					break;
+
+				case RF_BIT_FMT_LH:
+					if (new_bit == '1') {
+						write(fd, "0", 1);
+						usleep(config->data_bit1_l_time);
+						write(fd, "1", 1);
+						usleep(config->data_bit1_h_time);
+					} else {
+						write(fd, "0", 1);
+						usleep(config->data_bit0_l_time);
+						write(fd, "1", 1);
+						usleep(config->data_bit0_h_time);
+					}
+					break;
+
+				case RF_BIT_FMT_RAW:
+					if (new_bit != old_bit) {
+						old_bit = new_bit;
+						write(fd, &new_bit, 1);
+					}
+
+					usleep(config->base_time);
+					break;
+			}
+		}
+
+		switch (config->bit_fmt) {
+			case RF_BIT_FMT_HL:
+				write(fd, "1", 1);
+				usleep(config->end_bit_h_time);
+				write(fd, "0", 1);
+				usleep(config->end_bit_l_time);
+				break;
+
+			case RF_BIT_FMT_LH:
+				write(fd, "0", 1);
+				usleep(config->end_bit_l_time);
+				write(fd, "1", 1);
+				usleep(config->end_bit_h_time);
+				break;
+		}
 	}
 
 	/* Make sure to turn off the transmitter */
