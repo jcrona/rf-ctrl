@@ -19,6 +19,13 @@ ENABLE_ALSA ?= true
 # Where to install the software
 INSTALLATION_PATH ?= /usr/local/bin
 
+# Where the configuration file should be placed
+CONFIGURATION_FILE_LOCATION ?= /etc
+
+
+CONFIGURATION_FILE = $(TARGET).conf
+
+CFLAGS += -DCONFIG_FILE_LOCATION=\"$(CONFIGURATION_FILE_LOCATION)\"
 
 ifeq ($(STATIC), true)
 	LDFLAGS += -static
@@ -57,6 +64,7 @@ $(TARGET): $(OBJECTS)
 
 install:
 	install -D $(TARGET) $(INSTALLATION_PATH)
+	install -D $(CONFIGURATION_FILE) $(CONFIGURATION_FILE_LOCATION)
 
 clean:
 	$(RM) $(OBJECTS) $(TARGET)

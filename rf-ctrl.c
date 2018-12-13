@@ -46,6 +46,21 @@
 
 #define DEFAULT_RAW_FALLBACK_ACCURACY	90 // This changes how accurate will be the base_time for generated RAW frames (100 minus the allowed error in % of the shortest timing)
 
+#ifndef CONFIG_FILE_LOCATION
+#define CONFIG_FILE_LOCATION		"/etc"
+#endif
+
+#define CONFIG_FILE_PATH		CONFIG_FILE_LOCATION"/"APP_NAME".conf"
+#define CONFIG_LINE_MAX			1024 // bytes
+
+#define CONFIG_FIELD_HARDWARE		"HARDWARE"
+#define CONFIG_FIELD_GPIO		"GPIO"
+#define CONFIG_FIELD_RAW		"FORCE_RAW"
+#define CONFIG_FIELD_ACCURACY		"RAW_ACCURACY"
+
+#define CONFIG_VALUE_TRUE		"TRUE"
+#define CONFIG_VALUE_FALSE		"FALSE"
+
 /* WARNING: Needs to remain in-sync with PARAM_* defines in rf-ctrl.h */
 char *(parameter_str[]) = {
 	"hw",
@@ -276,6 +291,88 @@ static int get_cmd_id_by_name(char *cmd_str) {
 	}
 
 	return -1;
+}
+
+static int parse_config_file(uint16_t *provided_params, int *hw, struct rf_hardware_params *hw_params) {
+	FILE * f;
+	char line[CONFIG_LINE_MAX];
+	char *field, *value;
+	char *p;
+
+	f = fopen(CONFIG_FILE_PATH, "r");
+	if (f == NULL) {
+		dbg_printf(1, "Warning: Cannot open %s\n", CONFIG_FILE_PATH);
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), f) != NULL) {
+		/* Remove leading spaces */
+		field = line;
+		while (*field == ' ' || *field == '\t') {
+			field++;
+		}
+
+		/* Detect comments */
+		if (*field == '#') {
+			continue;
+		}
+
+		value = strstr(line, "=");
+		if (value == NULL) {
+			continue;
+		}
+
+		/* Remove '=' */
+		p = value;
+		*value++ = '\0';
+
+		/* Remove trailing spaces */
+		while (p > field && (*p == ' ' || *p == '\t' || *p == '\0')) {
+			*p-- = '\0';
+		}
+
+		/* Remove leading spaces */
+		while (*value == ' ' || *value == '\t') {
+			value++;
+		}
+
+		/* Remove trailing spaces */
+		p = value + strlen(value);
+		while (p > value && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\0')) {
+			*p-- = '\0';
+		}
+
+		if (!strncmp(field, CONFIG_FIELD_HARDWARE, sizeof(CONFIG_FIELD_HARDWARE) - 1)) {
+			*hw = strtoul(value, &p, 0);
+			if (*p != '\0') {
+				*hw = get_hw_id_by_name(value);
+			}
+
+			if (*hw < 0 || *hw >= ARRAY_SIZE(hardware_drivers)) {
+				fprintf(stderr, "Unsupported RF hardware %s in configuration file\n", value);
+				continue;
+			}
+
+			*provided_params |= PARAM_HARDWARE;
+		} else if (!strncmp(field, CONFIG_FIELD_GPIO, sizeof(CONFIG_FIELD_GPIO) - 1)) {
+			hw_params->gpio = strtoul(value, &p, 0);
+			*provided_params |= PARAM_GPIO;
+		} else if (!strncmp(field, CONFIG_FIELD_RAW, sizeof(CONFIG_FIELD_RAW) - 1)) {
+			if (!strncmp(value, CONFIG_VALUE_TRUE, sizeof(CONFIG_VALUE_TRUE) - 1)) {
+				*provided_params |= PARAM_RAW;
+			}
+		} else if (!strncmp(field, CONFIG_FIELD_ACCURACY, sizeof(CONFIG_FIELD_ACCURACY) - 1)) {
+			raw_fallback_accuracy = strtoul(value, NULL, 0);
+			if (raw_fallback_accuracy > 100) {
+				fprintf(stderr, "Invalid accuracy %s in configuration file\n", value);
+				continue;
+			}
+
+			*provided_params |= PARAM_ACCURACY;
+		}
+	}
+
+	fclose(f);
 }
 
 static int gcd(uint16_t a, uint16_t b, uint16_t accuracy) {
@@ -535,6 +632,9 @@ int main(int argc, char **argv)
 	char * p;
 	uint32_t i, j, k;
 
+	/* Parse the configuration file first */
+	parse_config_file(&provided_params, &hw, &hw_params);
+
 	for (;;) {
 		int index;
 		int c;
@@ -649,6 +749,8 @@ int main(int argc, char **argv)
 				return -1;
 		}
 	}
+
+	dbg_printf(2, "Used configuration file is %s\n", CONFIG_FILE_PATH);
 
 	if (needed_params & ~(provided_params)) {
 		fprintf(stderr, "Missing arguments:");

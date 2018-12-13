@@ -42,6 +42,8 @@ endef
 define Package/rf-ctrl/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rf-ctrl $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/etc
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/rf-ctrl.conf $(1)/etc
 endef
 
 $(eval $(call BuildPackage,rf-ctrl))
