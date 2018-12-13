@@ -119,17 +119,25 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 	for (j = 0; j < config->frame_count; j++) {
 		switch (config->bit_fmt) {
 			case RF_BIT_FMT_HL:
-				write(fd, "1", 1);
-				usleep(config->start_bit_h_time);
-				write(fd, "0", 1);
-				usleep(config->start_bit_l_time);
+				if (config->start_bit_h_time > 0) {
+					write(fd, "1", 1);
+					usleep(config->start_bit_h_time);
+				}
+				if (config->start_bit_l_time > 0) {
+					write(fd, "0", 1);
+					usleep(config->start_bit_l_time);
+				}
 				break;
 
 			case RF_BIT_FMT_LH:
-				write(fd, "0", 1);
-				usleep(config->start_bit_l_time);
-				write(fd, "1", 1);
-				usleep(config->start_bit_h_time);
+				if (config->start_bit_l_time > 0) {
+					write(fd, "0", 1);
+					usleep(config->start_bit_l_time);
+				}
+				if (config->start_bit_h_time > 0) {
+					write(fd, "1", 1);
+					usleep(config->start_bit_h_time);
+				}
 				break;
 		}
 
@@ -141,29 +149,45 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 			switch (config->bit_fmt) {
 				case RF_BIT_FMT_HL:
 					if (new_bit == '1') {
-						write(fd, "1", 1);
-						usleep(config->data_bit1_h_time);
-						write(fd, "0", 1);
-						usleep(config->data_bit1_l_time);
+						if (config->data_bit1_h_time > 0) {
+							write(fd, "1", 1);
+							usleep(config->data_bit1_h_time);
+						}
+						if (config->data_bit1_l_time > 0) {
+							write(fd, "0", 1);
+							usleep(config->data_bit1_l_time);
+						}
 					} else {
-						write(fd, "1", 1);
-						usleep(config->data_bit0_h_time);
-						write(fd, "0", 1);
-						usleep(config->data_bit0_l_time);
+						if (config->data_bit0_h_time > 0) {
+							write(fd, "1", 1);
+							usleep(config->data_bit0_h_time);
+						}
+						if (config->data_bit0_l_time > 0) {
+							write(fd, "0", 1);
+							usleep(config->data_bit0_l_time);
+						}
 					}
 					break;
 
 				case RF_BIT_FMT_LH:
 					if (new_bit == '1') {
-						write(fd, "0", 1);
-						usleep(config->data_bit1_l_time);
-						write(fd, "1", 1);
-						usleep(config->data_bit1_h_time);
+						if (config->data_bit1_l_time > 0) {
+							write(fd, "0", 1);
+							usleep(config->data_bit1_l_time);
+						}
+						if (config->data_bit1_h_time > 0) {
+							write(fd, "1", 1);
+							usleep(config->data_bit1_h_time);
+						}
 					} else {
-						write(fd, "0", 1);
-						usleep(config->data_bit0_l_time);
-						write(fd, "1", 1);
-						usleep(config->data_bit0_h_time);
+						if (config->data_bit0_l_time > 0) {
+							write(fd, "0", 1);
+							usleep(config->data_bit0_l_time);
+						}
+						if (config->data_bit0_h_time > 0) {
+							write(fd, "1", 1);
+							usleep(config->data_bit0_h_time);
+						}
 					}
 					break;
 
@@ -180,17 +204,25 @@ static int sysfs_gpio_send_cmd(struct timing_config *config, uint8_t *frame_data
 
 		switch (config->bit_fmt) {
 			case RF_BIT_FMT_HL:
-				write(fd, "1", 1);
-				usleep(config->end_bit_h_time);
-				write(fd, "0", 1);
-				usleep(config->end_bit_l_time);
+				if (config->end_bit_h_time > 0) {
+					write(fd, "1", 1);
+					usleep(config->end_bit_h_time);
+				}
+				if (config->end_bit_l_time > 0) {
+					write(fd, "0", 1);
+					usleep(config->end_bit_l_time);
+				}
 				break;
 
 			case RF_BIT_FMT_LH:
-				write(fd, "0", 1);
-				usleep(config->end_bit_l_time);
-				write(fd, "1", 1);
-				usleep(config->end_bit_h_time);
+				if (config->end_bit_l_time > 0) {
+					write(fd, "0", 1);
+					usleep(config->end_bit_l_time);
+				}
+				if (config->end_bit_h_time > 0) {
+					write(fd, "1", 1);
+					usleep(config->end_bit_h_time);
+				}
 				break;
 		}
 	}
